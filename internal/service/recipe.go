@@ -37,10 +37,6 @@ func (rs *recipeService) FindAll(ctx context.Context) ([]*model.Recipe, error) {
 	return recipes, nil
 }
 
-func (rs *recipeService) Create(ctx context.Context, recipe model.Recipe) ([]*model.Recipe, error) {
-	r, err := rs.repo.Create(ctx, recipe)
-	if err != nil {
-		return nil, err
-	}
-	return []*model.Recipe{r}, nil
+func (rs *recipeService) Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
+	return rs.repo.Create(ctx, recipe)
 }

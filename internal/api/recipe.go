@@ -83,7 +83,7 @@ func (h *Handler) createRecipe(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Recipe successfully created!",
-		"recipe":  result,
+		"recipe":  []*model.Recipe{result},
 	})
 }
 

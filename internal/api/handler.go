@@ -31,13 +31,13 @@ func NewHandler(c *Config) {
 
 	c.R.Use(gin.Recovery())
 	c.R.Use(middleware.Timeout(c.TimeoutDuration, apperrors.NewServiceUnavailable()))
+	c.R.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{})
+	})
 
-	g := c.R.Group("/api/v1")
-	{
-		g.GET("/recipes", h.getRecipes)
-		g.GET("/recipes/:id", h.getRecipeByID)
-		g.POST("/recipes", h.createRecipe)
-		g.DELETE("/recipes/:id", h.deleteRecipeByID)
-		g.PATCH("/recipes/:id", h.updateRecipeByID)
-	}
+	c.R.GET("/recipes", h.getRecipes)
+	c.R.GET("/recipes/:id", h.getRecipeByID)
+	c.R.POST("/recipes", h.createRecipe)
+	c.R.DELETE("/recipes/:id", h.deleteRecipeByID)
+	c.R.PATCH("/recipes/:id", h.updateRecipeByID)
 }
