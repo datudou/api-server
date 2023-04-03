@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,9 @@ func NewHandler(c *Config) {
 	c.R.Use(gin.Recovery())
 	c.R.Use(middleware.Timeout(c.TimeoutDuration, apperrors.NewServiceUnavailable()))
 	c.R.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{})
+		c.JSON(http.StatusOK, gin.H{
+			"messgae": "Welcome to the Recipe API",
+		})
 	})
 
 	c.R.GET("/recipes", h.getRecipes)

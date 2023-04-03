@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func (h *Handler) getRecipeByID(c *gin.Context) {
 	}
 	recipe, err := h.Services.RecipeService.FindByID(ctx, uint(id))
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": err,
 		})
 		return
@@ -53,12 +54,11 @@ func (h *Handler) createRecipe(c *gin.Context) {
 		MakingTime  string `json:"making_time" binding:"required"`
 		Serves      string `json:"serves" binding:"required"`
 		Ingredients string `json:"ingredients" binding:"required"`
-		Cost        string `json:"cost" binding:"required"`
+		Cost        int    `json:"cost" binding:"required"`
 	}
 	var param createRecipeParam
-	if err := c.ShouldBind(&param); err != nil {
-		zap.S().Errorf("Failed to bind request body: %v", err)
-		c.JSON(apperrors.Status(err), gin.H{
+	if err := c.ShouldBindJSON(&param); err != nil {
+		c.JSON(http.StatusOK, gin.H{
 			"message":  "Recipe creation failed!",
 			"required": "title, making_time, serves, ingredients, cost",
 		})
@@ -114,13 +114,13 @@ func (h *Handler) updateRecipeByID(c *gin.Context) {
 		MakingTime  string `json:"making_time"`
 		Serves      string `json:"serves"`
 		Ingredients string `json:"ingredients"`
-		Cost        string `json:"cost"`
+		Cost        int    `json:"cost"`
 	}
 	ctx := c.Request.Context()
 	var param updateRecipeParam
-	if err := c.Bind(&param); err != nil {
+	if err := c.ShouldBindJSON(&param); err != nil {
 		zap.S().Errorf("Failed to bind request body: %v", err)
-		c.JSON(apperrors.Status(err), gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message":  "Recipe update failed!",
 			"required": "need to specify id",
 		})
