@@ -17,21 +17,40 @@ func NewRecipeRepo(db *gorm.DB) IRecipeRepo {
 	}
 }
 
-func (*recipeRepo) DeleteByID(ctx context.Context, ID uint) (*model.Recipe, error) {
-	panic("unimplemented")
+func (rp *recipeRepo) DeleteByID(ctx context.Context, ID uint) error {
+	recipe := model.Recipe{ID: ID}
+	err := rp.DB.Table("recipes").Delete(&recipe).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (*recipeRepo) UpdateByID(ctx context.Context, ID uint) (*model.Recipe, error) {
-	panic("unimplemented")
-}
-
-func (pr *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, error) {
-	var Recipe model.Recipe
-	err := pr.DB.Table("recipes").Where("id = ?", ID).First(&Recipe).Error
+func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
+	err := rp.DB.Table("recipes").
+		Set("gorm:query_option", "FOR update").
+		Where("id = ?", recipe.ID).
+		Select("title", "making_time", "serves", "ingredients").
+		Updates(map[string]interface{}{
+			"title":       recipe.Title,
+			"making_time": recipe.MakingTime,
+			"serves":      recipe.Serves,
+			"ingredients": recipe.Ingredients,
+		}).
+		Error
 	if err != nil {
 		return nil, err
 	}
-	return &Recipe, nil
+	return &recipe, nil
+}
+
+func (pr *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, error) {
+	var recipe model.Recipe
+	err := pr.DB.Table("recipes").Where("id = ?", ID).First(&recipe).Error
+	if err != nil {
+		return nil, err
+	}
+	return &recipe, nil
 }
 
 func (pr *recipeRepo) FindAll(ctx context.Context) ([]*model.Recipe, error) {
@@ -53,7 +72,7 @@ func (pr *recipeRepo) FindByTeamID(ctx context.Context, teamID uint) (*model.Rec
 }
 
 func (pr *recipeRepo) Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	if err := pr.DB.Table("recipes").Create(&recipe).Error; err != nil {
+	if err := pr.DB.Create(&recipe).Error; err != nil {
 		return nil, err
 	}
 	return &recipe, nil

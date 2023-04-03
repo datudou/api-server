@@ -34,10 +34,10 @@ func NewHandler(c *Config) {
 
 	g := c.R.Group("/api/v1")
 	{
-		// g.POST("/recipes/", h.createRecipe)
 		g.GET("/recipes", h.getRecipes)
 		g.GET("/recipes/:id", h.getRecipeByID)
-		// g.PATCH("/recipes/:id", h.updateRecipe)
-		// g.DELETE("/recipes/:id", h.updateRecipe)
+		g.POST("/recipes", h.createRecipe)
+		g.DELETE("/recipes/:id", h.deleteRecipeByID)
+		g.PATCH("/recipes/:id", h.updateRecipeByID)
 	}
 }

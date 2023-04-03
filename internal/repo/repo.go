@@ -10,9 +10,9 @@ import (
 type IRecipeRepo interface {
 	FindByID(ctx context.Context, ID uint) (*model.Recipe, error)
 	FindAll(ctx context.Context) ([]*model.Recipe, error)
-	UpdateByID(ctx context.Context, ID uint) (*model.Recipe, error)
+	UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error)
 	Create(ctx context.Context, Recipe model.Recipe) (*model.Recipe, error)
-	DeleteByID(ctx context.Context, ID uint) (*model.Recipe, error)
+	DeleteByID(ctx context.Context, ID uint) error
 }
 
 type Repositories struct {
