@@ -23,22 +23,6 @@ func Migrate(db *gorm.DB) {
 					return tx.Migrator().DropTable("recipes")
 				},
 			},
-			// {
-			// 	ID: "inital_data",
-			// 	Migrate: func(tx *gorm.DB) error {
-			// 		di := NewDataInitial(tx)
-			// 		err := di.initTeamData()
-			// 		if err != nil {
-			// 			return err
-			// 		}
-			// 		err = di.initPlayerData()
-			// 		if err != nil {
-			// 			fmt.Printf("Error: %v", err)
-			// 			return err
-			// 		}
-			// 		return nil
-			// 	},
-			// },
 		})
 
 	if err := m.Migrate(); err != nil {

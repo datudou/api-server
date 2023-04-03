@@ -5,6 +5,7 @@ import (
 
 	"github.com/retail-ai-test/internal/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type recipeRepo struct {
@@ -17,62 +18,77 @@ func NewRecipeRepo(db *gorm.DB) IRecipeRepo {
 	}
 }
 
-func (rp *recipeRepo) DeleteByID(ctx context.Context, ID uint) error {
-	recipe := model.Recipe{ID: ID}
-	err := rp.DB.Table("recipes").Delete(&recipe).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	err := rp.DB.Table("recipes").
-		Set("gorm:query_option", "FOR update").
-		Where("id = ?", recipe.ID).
-		Select("title", "making_time", "serves", "ingredients").
-		Updates(map[string]interface{}{
-			"title":       recipe.Title,
-			"making_time": recipe.MakingTime,
-			"serves":      recipe.Serves,
-			"ingredients": recipe.Ingredients,
-		}).
-		Error
-	if err != nil {
-		return nil, err
-	}
-	return &recipe, nil
-}
-
-func (pr *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, error) {
+func (rp *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, error) {
 	var recipe model.Recipe
-	err := pr.DB.Table("recipes").Where("id = ?", ID).First(&recipe).Error
+	err := rp.DB.Table("recipes").Where("id = ?", ID).First(&recipe).Error
 	if err != nil {
 		return nil, err
 	}
 	return &recipe, nil
 }
 
-func (pr *recipeRepo) FindAll(ctx context.Context) ([]*model.Recipe, error) {
+func (rp *recipeRepo) FindAll(ctx context.Context) ([]*model.Recipe, error) {
 	var recipes []*model.Recipe
-	err := pr.DB.Table("recipes").Find(&recipes).Error
+	err := rp.DB.Table("recipes").Find(&recipes).Error
 	if err != nil {
 		return nil, err
 	}
 	return recipes, nil
 }
 
-func (pr *recipeRepo) FindByTeamID(ctx context.Context, teamID uint) (*model.Recipe, error) {
-	var Recipe model.Recipe
-	err := pr.DB.Table("recipes").Where("team_id = ?", teamID).First(&Recipe).Error
-	if err != nil {
+func (rp *recipeRepo) Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
+	tx := rp.DB.Begin()
+	if err := tx.Create(&recipe).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
-	return &Recipe, nil
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+	return &recipe, nil
 }
 
-func (pr *recipeRepo) Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	if err := pr.DB.Create(&recipe).Error; err != nil {
+func (rp *recipeRepo) DeleteByID(ctx context.Context, ID uint) error {
+	tx := rp.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	recipe := model.Recipe{ID: ID}
+	err := tx.Table("recipes").Delete(&recipe).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
+	tx := rp.DB.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	err := tx.Table("recipes").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ?", recipe.ID).
+		Select("title", "making_time", "serves", "ingredients", "cost").
+		Updates(map[string]interface{}{
+			"title":       recipe.Title,
+			"making_time": recipe.MakingTime,
+			"serves":      recipe.Serves,
+			"ingredients": recipe.Ingredients,
+			"cost":        recipe.Cost,
+		}).
+		Error
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 	return &recipe, nil
