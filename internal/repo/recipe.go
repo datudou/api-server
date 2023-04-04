@@ -58,11 +58,8 @@ func (rp *recipeRepo) DeleteByID(ctx context.Context, id uint) error {
 }
 
 func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	tx := rp.db.Begin()
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-	err := tx.Table(recipe.TableName()).
+
+	tx := rp.db.Table(recipe.TableName()).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", recipe.ID).
 		Select("title", "making_time", "serves", "ingredients", "cost").
@@ -72,18 +69,14 @@ func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*mod
 			"serves":      recipe.Serves,
 			"ingredients": recipe.Ingredients,
 			"cost":        recipe.Cost,
-		}).
-		Error
+		})
+
 	if tx.RowsAffected < 1 {
-		return nil, fmt.Errorf("row with id=%d cannot be update because it doesn't exist", recipe.ID)
+		return nil, fmt.Errorf("row with id=%d cannot be updated ,cannot be updated may be same params or not match the constraint", recipe.ID)
 	}
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+	if tx.Error != nil {
+		return nil, tx.Error
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
-	}
 	return &recipe, nil
 }

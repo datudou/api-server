@@ -26,7 +26,6 @@ func (ur *userService) Create(ctx context.Context, user model.User) (*response.U
 	return &u, nil
 }
 
-// DeleteByID implements IUserService
 func (ur *userService) DeleteByID(ctx context.Context, userID string) error {
 	return ur.repo.DeleteByID(ctx, userID)
 }

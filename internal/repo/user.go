@@ -49,26 +49,20 @@ func (ur *userRepo) FindByID(ctx context.Context, userID string) (*model.User, e
 
 func (ur *userRepo) UpdateByID(ctx context.Context, user model.User) (*model.User, error) {
 
-	tx := ur.db.Begin()
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-	err := tx.Table(user.TableName()).
+	tx := ur.db.Table(user.TableName()).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("user_id = ?", user.UserID).
 		Select("nick_name", "comment").
 		Updates(map[string]interface{}{
 			"nick_name": user.NickName,
 			"comment":   user.Comment,
-		}).
-		Error
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+		})
+	if tx.RowsAffected < 1 {
+		return nil, fmt.Errorf("row with id=%s cannot be updated may be same params or not match the constraint", user.UserID)
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
+	if tx.Error != nil {
+		return nil, tx.Error
 	}
 	return &user, nil
 }

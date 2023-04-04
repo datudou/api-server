@@ -15,17 +15,17 @@ func GetEnvInfo(env string) bool {
 
 func InitConfig() error {
 	configFilePrefix := "config"
-	configFileName := fmt.Sprintf("./config/%s-dev.yaml", configFilePrefix)
+	configFileName := fmt.Sprintf("./%s-dev.yaml", configFilePrefix)
 
 	v := viper.New()
 	v.SetConfigFile(configFileName)
 	if err := v.ReadInConfig(); err != nil {
-		zap.S().Errorf("Failed to read config file: %v", err)
+		zap.S().Panic("Failed to read config file: %v", err)
 		return err
 	}
 
 	if err := v.Unmarshal(&config.ServerConf); err != nil {
-		zap.S().Errorf("Failed to unmarshal config file: %v", err)
+		zap.S().Panic("Failed to unmarshal config file: %v", err)
 		return err
 	}
 	return nil

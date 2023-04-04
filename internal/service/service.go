@@ -11,8 +11,8 @@ import (
 type IRecipeService interface {
 	FindByID(ctx context.Context, ID uint) ([]*response.Recipe, error)
 	FindAll(ctx context.Context) ([]*response.Recipe, error)
-	UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error)
-	Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error)
+	UpdateByID(ctx context.Context, recipe model.Recipe) (*response.Recipe, error)
+	Create(ctx context.Context, recipe model.Recipe) (*response.Recipe, error)
 	DeleteByID(ctx context.Context, ID uint) error
 }
 

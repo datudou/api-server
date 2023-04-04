@@ -77,7 +77,7 @@ func (h *Handler) createRecipe(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Recipe successfully created!",
-		"recipe":  []*model.Recipe{result},
+		"recipe":  []*response.Recipe{result},
 	})
 }
 
@@ -139,6 +139,6 @@ func (h *Handler) updateRecipeByID(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{
 		"message": "Recipe successfully updated!",
-		"recipe":  []*model.Recipe{result},
+		"recipe":  []*response.Recipe{result},
 	})
 }
