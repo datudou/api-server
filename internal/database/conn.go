@@ -41,6 +41,6 @@ func SetupConn() error {
 	return nil
 }
 
-func Get() *gorm.DB {
+func GetConn() *gorm.DB {
 	return db
 }

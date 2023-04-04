@@ -15,7 +15,7 @@ func GetEnvInfo(env string) bool {
 
 func InitConfig() error {
 	configFilePrefix := "config"
-	configFileName := fmt.Sprintf("./config/%s-debug.yaml", configFilePrefix)
+	configFileName := fmt.Sprintf("./config/%s-dev.yaml", configFilePrefix)
 
 	v := viper.New()
 	v.SetConfigFile(configFileName)

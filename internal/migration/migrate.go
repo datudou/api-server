@@ -17,10 +17,10 @@ func Migrate(db *gorm.DB) {
 			{
 				ID: "Initial",
 				Migrate: func(tx *gorm.DB) error {
-					return tx.AutoMigrate(&model.Recipe{})
+					return tx.AutoMigrate(&model.Recipe{}, &model.User{})
 				},
 				Rollback: func(tx *gorm.DB) error {
-					return tx.Migrator().DropTable("recipes")
+					return tx.Migrator().DropTable(model.Recipe{}.TableName(), "users")
 				},
 			},
 		})

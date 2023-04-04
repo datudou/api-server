@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/retail-ai-test/internal/model"
 	"gorm.io/gorm"
@@ -9,18 +10,18 @@ import (
 )
 
 type recipeRepo struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func NewRecipeRepo(db *gorm.DB) IRecipeRepo {
 	return &recipeRepo{
-		DB: db,
+		db: db,
 	}
 }
 
 func (rp *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, error) {
 	var recipe model.Recipe
-	err := rp.DB.Table("recipes").Where("id = ?", ID).First(&recipe).Error
+	err := rp.db.WithContext(ctx).Where("id = ?", ID).First(&recipe).Error
 	if err != nil {
 		return nil, err
 	}
@@ -29,49 +30,39 @@ func (rp *recipeRepo) FindByID(ctx context.Context, ID uint) (*model.Recipe, err
 
 func (rp *recipeRepo) FindAll(ctx context.Context) ([]*model.Recipe, error) {
 	var recipes []*model.Recipe
-	err := rp.DB.Table("recipes").Find(&recipes).Error
-	if err != nil {
-		return nil, err
+	tx := rp.db.WithContext(ctx).Find(&recipes)
+	if tx.RowsAffected < 1 {
+		return nil, fmt.Errorf("no rows found")
+	}
+	if tx.Error != nil {
+		return nil, tx.Error
 	}
 	return recipes, nil
 }
 
 func (rp *recipeRepo) Create(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	tx := rp.DB.Begin()
-	if err := tx.Create(&recipe).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err := rp.db.WithContext(ctx).Create(&recipe).Error; err != nil {
 		return nil, err
 	}
 	return &recipe, nil
 }
 
-func (rp *recipeRepo) DeleteByID(ctx context.Context, ID uint) error {
-	tx := rp.DB.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-	recipe := model.Recipe{ID: ID}
-	err := tx.Table("recipes").Delete(&recipe).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Commit().Error; err != nil {
-		return err
+func (rp *recipeRepo) DeleteByID(ctx context.Context, id uint) error {
+
+	recipe := model.Recipe{Model: gorm.Model{ID: id}}
+	tx := rp.db.WithContext(ctx).Delete(&recipe)
+	if tx.RowsAffected < 1 {
+		return fmt.Errorf("row with id=%d cannot be deleted because it doesn't exist", id)
 	}
 	return nil
 }
 
 func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	tx := rp.DB.Begin()
+	tx := rp.db.Begin()
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	err := tx.Table("recipes").
+	err := tx.Table(recipe.TableName()).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", recipe.ID).
 		Select("title", "making_time", "serves", "ingredients", "cost").
@@ -83,6 +74,9 @@ func (rp *recipeRepo) UpdateByID(ctx context.Context, recipe model.Recipe) (*mod
 			"cost":        recipe.Cost,
 		}).
 		Error
+	if tx.RowsAffected < 1 {
+		return nil, fmt.Errorf("row with id=%d cannot be update because it doesn't exist", recipe.ID)
+	}
 	if err != nil {
 		tx.Rollback()
 		return nil, err

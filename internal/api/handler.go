@@ -2,11 +2,9 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/retail-ai-test/internal/middleware"
-	"github.com/retail-ai-test/internal/model/apperrors"
 	"github.com/retail-ai-test/internal/service"
 )
 
@@ -18,9 +16,8 @@ type Handler struct {
 // Config will hold services that will eventually be injected into this
 // handler layer on handler initialization
 type Config struct {
-	R               *gin.Engine
-	Services        *service.Services
-	TimeoutDuration time.Duration
+	R        *gin.Engine
+	Services *service.Services
 }
 
 // NewHandler initializes the handler with required injected services along with http routes
@@ -31,16 +28,27 @@ func NewHandler(c *Config) {
 	}
 
 	c.R.Use(gin.Recovery())
-	c.R.Use(middleware.Timeout(c.TimeoutDuration, apperrors.NewServiceUnavailable()))
 	c.R.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"messgae": "Welcome to the Recipe API",
+			"message": "Welcome to the Recipe API",
 		})
 	})
 
-	c.R.GET("/recipes", h.getRecipes)
-	c.R.GET("/recipes/:id", h.getRecipeByID)
-	c.R.POST("/recipes", h.createRecipe)
-	c.R.DELETE("/recipes/:id", h.deleteRecipeByID)
-	c.R.PATCH("/recipes/:id", h.updateRecipeByID)
+	// recipe routes
+	{
+		c.R.GET("/recipes", h.getRecipes)
+		c.R.GET("/recipes/:id", h.getRecipeByID)
+		c.R.POST("/recipes", h.createRecipe)
+		c.R.DELETE("/recipes/:id", h.deleteRecipeByID)
+		c.R.PATCH("/recipes/:id", h.updateRecipeByID)
+	}
+
+	// user routes
+	c.R.POST("/signup", h.createUser)
+	auth := c.R.Use(middleware.Auth())
+	{
+		auth.GET("/users/:user_id", h.getUserByID)
+		auth.PATCH("/users/:user_id", h.updateUserByID)
+		auth.DELETE("/users/:user_id", h.deleteUserByID)
+	}
 }

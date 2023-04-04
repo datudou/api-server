@@ -15,12 +15,22 @@ type IRecipeRepo interface {
 	DeleteByID(ctx context.Context, ID uint) error
 }
 
+type IUserRepo interface {
+	FindByID(ctx context.Context, userID string) (*model.User, error)
+	UpdateByID(ctx context.Context, user model.User) (*model.User, error)
+	Create(ctx context.Context, user model.User) (*model.User, error)
+	DeleteByID(ctx context.Context, userID string) error
+	Validate(ctx context.Context, userID string, password string) (bool, error)
+}
+
 type Repositories struct {
 	RecipeRepo IRecipeRepo
+	UserRepo   IUserRepo
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
 		RecipeRepo: NewRecipeRepo(db),
+		UserRepo:   NewUserRepo(db),
 	}
 }

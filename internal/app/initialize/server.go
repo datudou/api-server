@@ -19,31 +19,31 @@ import (
 
 func InitServer() {
 	// init repo
-	repos := repo.NewRepositories(db.Get())
+	conn := db.GetConn()
+	repos := repo.NewRepositories(conn)
 	// init service
 	services := service.NewServices(service.Deps{
 		Repos: repos,
 	})
 	// init router
-	engine := gin.Default()
+	r := gin.Default()
 	api.NewHandler(&api.Config{
-		R:               engine,
-		Services:        services,
-		TimeoutDuration: time.Duration(config.ServerConf.Server.HTTPTimeout) * time.Second,
+		R:        r,
+		Services: services,
 	})
 
 	srv := &http.Server{
 		Addr:    config.ServerConf.Server.Addr,
-		Handler: engine,
+		Handler: r,
 	}
 
 	go func() {
 		// service connections
+		zap.S().Infof("Server listen on: %s", config.ServerConf.Server.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			zap.S().Fatalf("listen: %s\n", err)
 		}
 	}()
-	zap.S().Infof("Server listen on: %s", config.ServerConf.Server.Addr)
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	quit := make(chan os.Signal)

@@ -6,28 +6,31 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/retail-ai-test/internal/model"
-	"github.com/retail-ai-test/internal/model/apperrors"
+	"github.com/retail-ai-test/internal/model/request"
+	"github.com/retail-ai-test/internal/model/response"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func (h *Handler) getRecipeByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"error": err,
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Recipe details not found",
 		})
 		return
 	}
-	recipe, err := h.Services.RecipeService.FindByID(ctx, uint(id))
+	result, err := h.Services.RecipeService.FindByID(ctx, uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": err,
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Recipe details not found",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recipe details by id",
-		"recipe":  []*model.Recipe{recipe},
+		"recipe":  result,
 	})
 }
 
@@ -35,8 +38,8 @@ func (h *Handler) getRecipes(c *gin.Context) {
 	ctx := c.Request.Context()
 	result, err := h.Services.RecipeService.FindAll(ctx)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"error": err,
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Recipe details not found",
 		})
 		return
 	}
@@ -47,19 +50,11 @@ func (h *Handler) getRecipes(c *gin.Context) {
 }
 
 func (h *Handler) createRecipe(c *gin.Context) {
-
-	type createRecipeParam struct {
-		Title       string `json:"title" binding:"required"`
-		MakingTime  string `json:"making_time" binding:"required"`
-		Serves      string `json:"serves" binding:"required"`
-		Ingredients string `json:"ingredients" binding:"required"`
-		Cost        int    `json:"cost" binding:"required"`
-	}
-	var param createRecipeParam
+	var param request.CreateRecipeParam
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message":  "Recipe creation failed!",
-			"required": "title, making_time, serves, ingredients, cost",
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message:  "Recipe creation failed!",
+			Required: "title, making_time, serves, ingredients, cost",
 		})
 		return
 	}
@@ -74,8 +69,8 @@ func (h *Handler) createRecipe(c *gin.Context) {
 
 	result, err := h.Services.RecipeService.Create(ctx, recipe)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"error": err,
+		internalErrorRes(c, response.ErrorMessage{
+			Message: "Recipe creation failed!",
 		})
 		return
 	}
@@ -90,15 +85,16 @@ func (h *Handler) deleteRecipeByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"error": err,
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Invalid recipe id!",
 		})
 		return
 	}
 	err = h.Services.RecipeService.DeleteByID(ctx, uint(id))
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"message": "No recipe found",
+		zap.S().Errorf("Error while deleting recipe: %v", err)
+		internalErrorRes(c, response.ErrorMessage{
+			Message: "Recipe not found!",
 		})
 		return
 	}
@@ -108,31 +104,24 @@ func (h *Handler) deleteRecipeByID(c *gin.Context) {
 }
 
 func (h *Handler) updateRecipeByID(c *gin.Context) {
-	type updateRecipeParam struct {
-		Title       string `json:"title"`
-		MakingTime  string `json:"making_time"`
-		Serves      string `json:"serves"`
-		Ingredients string `json:"ingredients"`
-		Cost        int    `json:"cost"`
-	}
-	ctx := c.Request.Context()
-	var param updateRecipeParam
+
+	var param request.UpdateRecipeParam
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Recipe update failed!",
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Recipe update failed!",
 		})
 		return
 	}
 
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"error": err,
+		badRequestErrorRes(c, response.ErrorMessage{
+			Message: "Invalid recipe id!",
 		})
 		return
 	}
 	recipe := model.Recipe{
-		ID:          uint(id),
+		Model:       gorm.Model{ID: uint(id)},
 		Title:       param.Title,
 		MakingTime:  param.MakingTime,
 		Serves:      param.Serves,
@@ -140,11 +129,11 @@ func (h *Handler) updateRecipeByID(c *gin.Context) {
 		Cost:        param.Cost,
 	}
 
+	ctx := c.Request.Context()
 	result, err := h.Services.RecipeService.UpdateByID(ctx, recipe)
 	if err != nil {
-		c.JSON(apperrors.Status(err), gin.H{
-			"err":     err,
-			"message": "No recipe found",
+		internalErrorRes(c, response.ErrorMessage{
+			Message: "Recipe update failed!",
 		})
 		return
 	}
