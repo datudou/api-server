@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/retail-ai-test/internal/model"
-	"github.com/retail-ai-test/internal/model/request"
-	"github.com/retail-ai-test/internal/model/response"
+	"github.com/retail-ai-test/internal/pkg/model"
+	"github.com/retail-ai-test/internal/pkg/model/request"
+	"github.com/retail-ai-test/internal/pkg/model/response"
 )
 
 func (h *Handler) createUser(c *gin.Context) {

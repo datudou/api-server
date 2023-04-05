@@ -11,9 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/retail-ai-test/config"
 	"github.com/retail-ai-test/internal/api"
-	db "github.com/retail-ai-test/internal/database"
-	"github.com/retail-ai-test/internal/repo"
-	"github.com/retail-ai-test/internal/service"
+	db "github.com/retail-ai-test/internal/pkg/database"
+	"github.com/retail-ai-test/internal/pkg/repo"
+	"github.com/retail-ai-test/internal/pkg/service"
 	"go.uber.org/zap"
 )
 

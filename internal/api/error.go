@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/retail-ai-test/internal/model/response"
+	"github.com/retail-ai-test/internal/pkg/model/response"
 )
 
 func forbiddenErrorRes(c *gin.Context, message response.ErrorMessage) {

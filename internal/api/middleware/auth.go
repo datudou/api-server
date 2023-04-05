@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	db "github.com/retail-ai-test/internal/database"
-	"github.com/retail-ai-test/internal/repo"
+	db "github.com/retail-ai-test/internal/pkg/database"
+	"github.com/retail-ai-test/internal/pkg/repo"
 	"go.uber.org/zap"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/retail-ai-test/internal/model"
+	"github.com/retail-ai-test/internal/pkg/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

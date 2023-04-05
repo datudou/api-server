@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	db "github.com/retail-ai-test/internal/database"
+	db "github.com/retail-ai-test/internal/pkg/database"
 	"go.uber.org/zap"
 )
 

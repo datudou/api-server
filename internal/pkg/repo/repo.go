@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 
-	"github.com/retail-ai-test/internal/model"
+	"github.com/retail-ai-test/internal/pkg/model"
 	"gorm.io/gorm"
 )
 

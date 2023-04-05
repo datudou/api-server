@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	"github.com/retail-ai-test/internal/model"
-	"github.com/retail-ai-test/internal/model/response"
-	"github.com/retail-ai-test/internal/repo"
+	"github.com/retail-ai-test/internal/pkg/model"
+	"github.com/retail-ai-test/internal/pkg/model/response"
+	"github.com/retail-ai-test/internal/pkg/repo"
 )
 
 type userService struct {

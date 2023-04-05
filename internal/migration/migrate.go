@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/go-gormigrate/gormigrate/v2"
-	"github.com/retail-ai-test/internal/model"
+	"github.com/retail-ai-test/internal/pkg/model"
 	"gorm.io/gorm"
 )
 

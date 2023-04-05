@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/retail-ai-test/internal/middleware"
-	"github.com/retail-ai-test/internal/service"
+	"github.com/retail-ai-test/internal/api/middleware"
+	"github.com/retail-ai-test/internal/pkg/service"
 )
 
 // Handler struct holds required services for handler to function
