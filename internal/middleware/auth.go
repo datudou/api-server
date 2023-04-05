@@ -9,12 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/retail-ai-test/internal/database"
 	"github.com/retail-ai-test/internal/repo"
+	"go.uber.org/zap"
 )
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID := c.Param("user_id")
-		if !isValidUserID(userID) {
+		userIDinUri := c.Param("user_id")
+		if !isValidUserID(userIDinUri) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid User ID"})
 			c.Abort()
 			return
@@ -28,9 +29,10 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		isValid, err := isValidToken(c, token, userID)
+		isValid, err := isValidToken(c, token, userIDinUri)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
+			zap.S().Errorf("Error while validating token: %v", err)
+			c.JSON(http.StatusUnauthorized, gin.H{
 				"message": "Authentication Failed",
 			})
 			c.Abort()
@@ -38,18 +40,18 @@ func Auth() gin.HandlerFunc {
 		}
 
 		if !isValid {
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(http.StatusUnauthorized, gin.H{
 				"message": "Authentication Failed",
 			})
 			c.Abort()
 			return
 		}
-		c.Set("userID", userID)
+		c.Set("userID", userIDinUri)
 		c.Next()
 	}
 }
 
-func isValidToken(c *gin.Context, token, uriUserID string) (bool, error) {
+func isValidToken(c *gin.Context, token, userIDinUri string) (bool, error) {
 	token = strings.Replace(token, "Basic ", "", 1)
 	rawDecodedText, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
@@ -57,12 +59,13 @@ func isValidToken(c *gin.Context, token, uriUserID string) (bool, error) {
 	}
 	st := strings.Split(string(rawDecodedText), ":")
 	userID, password := st[0], st[1]
-	if userID != uriUserID {
+	//userID in auth header and uri should be same
+	if userID != userIDinUri {
 		return false, fmt.Errorf("userID is not matched")
 	}
 	userRepo := repo.NewUserRepo(db.GetConn())
-	ok, err := userRepo.Validate(c, userID, password)
-	if !ok {
+	exist, err := userRepo.Validate(c, userID, password)
+	if !exist {
 		return false, err
 	}
 	return true, nil
