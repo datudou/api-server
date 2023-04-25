@@ -13,13 +13,13 @@ To set up the project on your local machine, follow these steps:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/datudou/api-testing.git
+git clone https://github.com/datudou/api-server.git
 ```
 
 2. Change to the project directory:
 
 ```bash
-cd api-testing
+cd api-server
 ```
 3. Change the config-dev.yaml 
 
